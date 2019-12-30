@@ -342,7 +342,16 @@ if ($Join.IsPresent)
     if ($Global:Cni -eq "flannel")
     {
         CreateExternalNetwork -NetworkMode $Global:NetworkMode -InterfaceName $Global:InterfaceName
-        StartFlanneld 
+        # Replace flanneld installation with an workaroun
+        #StartFlanneld 
+        $HostIP = (Get-NetIPConfiguration | Where-Object {
+          $_.IPv4DefaultGateway -ne $null -and
+          $_.NetAdapter.Status -ne "Disconnected"
+        }).IPv4Address.IPAddress
+
+        & cmd /c "$PSScriptRoot\flanneld-nssm.bat" $HostIP
+        "Sleeping for 10 Seconds"
+        Start-Sleep -s 10
         WaitForNetwork $Global:NetworkName
     }
 
